@@ -1,0 +1,27 @@
+{
+        "url"             : { "value":"https://www.dropbox.com/s/7p4gwooqb5duijy/300W.zip?dl=1", "comment":                         "url to the dataset"},
+        "repository"      : { "value":         "https://github.com/jiankangdeng/MenpoBenchmark", "comment": "repository from which the dataset is taken"},
+        "zip_path"        : { "value":                                       "../data/300W.zip", "comment":        "where to put the downloaded dataset"},
+        "image_size"      : { "value":                                                [224,224], "comment":  "all images are resized to this resolution"},
+        "train_path"      : { "value":                                     "../data/300W/Train", "comment":                         "train dataset path"},
+        "test_path"       : { "value":                                     "../data/300W/Test" , "comment":                          "test dataset path"},
+        "validation_path" : { "value":                                "../data/300W/Validation", "commnet":                    "validation dataset path"},
+    
+        "class_path"      : { "value":"./utils/FLTModel.py", "comment":                                    "path to the the model that will be used" },
+        "model_path"      : { "value":  "../model/model.pt", "comment":                                      "path on which the model will be saved" },
+        "print_no_params" : { "value":                 true, "comment": "should the number of trainable parameters be printed when the train starts" },
+	"epoch_log_path"  : { "value": "../model/epoch_log", "comment":        "where the log (for each epoch) should be done, false for no logging" },
+	"step_log_path"   : { "value":                false, "comment":          "where the log (for each step) should be done, false for no logging"},
+	"verbose"         : { "value":                 true, "comment":                              "should logging steps be printed on std output" },
+
+        "restore"         : { "value":     true, "comment":             "should a stored model be loaded? when testing should be true" },
+        "mini_step_size"  : { "value":        2, "comment":                             "how many step to do before a gradient update" },
+	"batch_size"      : { "value":       16, "comment":                             "number of batches to be used during training" },
+	"end_epoch"       : { "value":      500, "comment":                           "for how many epoch should be the model trained" },
+	"random_seed"     : { "value":       14, "comment":                             "seed to be used for all random initialization"},
+	"device"          : { "value": "cuda:0", "comment":                             "cuda:0 for gpu training, cpu for cpu training"},
+	"show_images"     : { "value":    false, "comment": "true if should step-by-step mode should be used, images will be displayed"},
+	"steps_to_reload" : { "value":      100, "comment":      "how many mini_step should be done before reloading the configuration"},
+
+	"logging_format"  : { "value":"%(levelname)s|%(asctime)s| %(message)s", "comment":"format of the logging"}
+}

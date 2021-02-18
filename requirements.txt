@@ -1,0 +1,7 @@
+wget
+json
+torch
+numpy
+zipfile
+matplotlib
+opencv-python
