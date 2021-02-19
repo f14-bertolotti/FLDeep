@@ -25,6 +25,8 @@ class Model(torch.nn.Module):
         self.decoder   = torch.nn.TransformerDecoder(torch.nn.TransformerDecoderLayer(256,nhead=4,dim_feedforward=1024,activation="relu",dropout=.1),num_layers=2).to(configuration.device)
         self.peek      = self.generate_square_subsequent_mask(69).to(configuration.device)
 
+        self.normalize = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
+
         self.loss         = torch.nn.L1Loss(reduction="sum")
         self.optimizer    = torch.optim.Adam(self.parameters(),lr=0.0001)
 
@@ -38,10 +40,9 @@ class Model(torch.nn.Module):
             data = data.to(self.configuration.device)
             gold = gold.to(self.configuration.device)
 
-            res = self.resnet(data.transpose(1,3))
+            res = self.resnet(self.normalize(data.transpose(1,3)))
             res = res.view(res.size(0),res.size(1),res.size(2)*res.size(3))
 
-        
         srcs = self.src_upscale(res)
         tgts = torch.cat([self.sos.weight.unsqueeze(0).repeat(gold.size(0),1,1),self.tgt_upscale(gold)],1)
 

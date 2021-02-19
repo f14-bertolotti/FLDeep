@@ -1,5 +1,6 @@
 from utils.configuration import Configuration
 from utils.model         import     SaveModel
+from utils.metrics       import       Metrics
 from utils.dataset       import       Dataset
 from utils.image         import         Image
 from pathlib             import          Path
@@ -26,19 +27,22 @@ if __name__ == "__main__":
    
     with torch.no_grad():
         loss = None
-        for i,(data,gold) in enumerate(testdataset,1):
+        nme  = None
+        for i,(data, gold, true, icds, size, bbox) in enumerate(testdataset,1):
             gold = gold.to(configuration.device)
             pred = torch.zeros(gold.shape).to(configuration.device)
             for j in range(68):
-                print(f"step:{i}/{len(testdataset)}, pred:{j}/68, test_loss:{loss}\r",end="")
+                print(f"step:{i}/{len(testdataset)}, pred:{j}/68, test_loss:{loss}, nme:{nme}\r",end="")
                 pred[:,j] = model(data,gold)[0][:,j]
-    
+            
+
             configuration.load()
             if configuration.show_images: Image.showall(data,pred,gold,configuration)
     
             loss = loss+(model.loss(pred,gold).item()-loss)/i if loss else model.loss(pred,gold).item()
-    
-    logging.info(f"epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{loss}")
+            nme  = nme +(Metrics.normalized_mean_error(pred.to("cpu"),true,icds,size,bbox).item()-nme)/i if nme else Metrics.normalized_mean_error(pred.to("cpu"),true,icds,size,bbox).item()
+
+    logging.info(f"epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{loss}, nme:{nme}")
     
     logging.info(f"{__file__.upper()} STARTING")
  

@@ -53,7 +53,7 @@ class Dataset:
         osize = (image.shape[0], image.shape[1])                                              
         nsize = (self.configuration.image_size[0], self.configuration.image_size[1])       
         image = cv2.resize(image,(nsize[0],nsize[1]),interpolation=cv2.INTER_NEAREST)
-        inter_corner_distance = ((annotations[36,0] - annotations[45,0])**2 + (annotations[36,1] - annotations[45,1])**2)**.5
+        inter_corner_distance = numpy.linalg.norm(annotations[36,:] - annotations[45,:])
         true  = annotations
         gold  = Dataset.np_normalize_annotations(annotations, osize, bbox)
         
