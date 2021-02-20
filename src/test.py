@@ -31,10 +31,11 @@ if __name__ == "__main__":
         for i,(data, gold, true, icds, size, bbox) in enumerate(testdataset,1):
             gold = gold.to(configuration.device)
             pred = torch.zeros(gold.shape).to(configuration.device)
-            for j in range(68):
+            for j in range(34):
                 print(f"step:{i}/{len(testdataset)}, pred:{j}/68, test_loss:{loss}, nme:{nme}\r",end="")
-                pred[:,j] = model(data,gold)[0][:,j]
-            
+                tmp = model(data,gold)[0]
+                pred[:,j] = tmp[:,j]
+                pred[:,67-j] = tmp[:,67-j]
 
             configuration.load()
             if configuration.show_images: Image.showall(data,pred,gold,configuration)

@@ -15,9 +15,9 @@
         "verbose"         : { "value":                 true, "comment":                              "should logging steps be printed on std output" },
         
         "restore"         : { "value":    false, "comment":             "should a stored model be loaded? when testing should be true" },
-        "mini_step_size"  : { "value":        2, "comment":                             "how many step to do before a gradient update" },
-        "batch_size"      : { "value":       16, "comment":                             "number of batches to be used during training" },
-        "end_epoch"       : { "value":      500, "comment":                           "for how many epoch should be the model trained" },
+        "mini_step_size"  : { "value":        1, "comment":                             "how many step to do before a gradient update" },
+        "batch_size"      : { "value":       32, "comment":                             "number of batches to be used during training" },
+        "end_epoch"       : { "value":     2000, "comment":                           "for how many epoch should be the model trained" },
         "random_seed"     : { "value":       14, "comment":                             "seed to be used for all random initialization"},
         "device"          : { "value": "cuda:0", "comment":                             "cuda:0 for gpu training, cpu for cpu training"},
         "show_images"     : { "value":    false, "comment": "true if should step-by-step mode should be used, images will be displayed"},
