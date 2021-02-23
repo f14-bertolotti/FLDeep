@@ -67,7 +67,8 @@ if __name__ == "__main__":
                 model.optimizer.zero_grad()
         
         valid_loss,valid_nme = evalueate(validdataset, model)
-        isbest = model.save_if_best(epoch=epoch+1, valid_loss=valid_loss)
+        isbest = model.save_if_best(name="best", epoch=epoch+1, valid_loss=valid_loss)
+        model.save(epoch=epoch+1, valid_loss=valid_loss)
         stdout_logger.info(f"EPOCH DONE. epoch:{epoch}, loss:{valid_loss}, nme:{nme}" + (" +" if isbest else ""))
         epoch_logger .info(f"EPOCH DONE. epoch:{epoch}, loss:{valid_loss}, nme:{nme}" + (" +" if isbest else ""))
 
