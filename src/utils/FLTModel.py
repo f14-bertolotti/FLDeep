@@ -61,7 +61,7 @@ class Model(torch.nn.Module):
                           self.eos.weight.unsqueeze(0).repeat(gold.size(0),1,1)],1)
 
         srcs += self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) # could position for tgt 
-        tgts += self.src_position.weight[:70,:].unsqueeze(0).repeat(gold.size(0),1,1) # and src be the same ?
+        tgts += self.tgt_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) # and src be the same ?
 
         mems = self.encoder(srcs.transpose(0,1))
         pred = self.decoder(memory=mems, tgt=tgts.transpose(0,1), tgt_mask=self.peek).transpose(0,1)
