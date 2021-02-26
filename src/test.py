@@ -30,7 +30,7 @@ if __name__ == "__main__":
         nme  = None
         for i,(data, gold, true, icds) in enumerate(testdataset,1):
             gold = gold.to(configuration.device)
-            pred = torch.zeros(gold.shape).to(configuration.device)
+            pred = torch.zeros(gold[:,7:].shape).to(configuration.device)
             for j in range(34):
                 print(f"step:{i}/{len(testdataset)}, pred:{j}/68, test_loss:{loss}, nme:{nme}\r",end="")
                 tmp = model(data,pred)[0]
