@@ -35,6 +35,7 @@ class Dataset:
     def preprocess(self, image_path, annotations):
         
         image  = torchvision.io.read_image(os.path.join(self.dataset_path,image_path)) # get image
+        if image.size(0) == 1: image = image.repeat(3,1,1)
         bimage = [[0,0],[image.shape[2],image.shape[1]]]                               # get shape
 
         bface = [[annotations[0,0],annotations[0,1]],[annotations[1,0],annotations[1,1]]]                                # get face bbox 
@@ -61,6 +62,7 @@ class Dataset:
         icd  = torch.tensor(icd        , dtype=torch.float, requires_grad=False)
         data = crop_resized.float()/255
         
+
         return data, gold, true, icd
 
     def sample(self):

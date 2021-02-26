@@ -58,10 +58,11 @@ class Model(torch.nn.Module):
         srcs = self.src_upscale(res)
 
         tgts = torch.cat([self.sos.weight.unsqueeze(0).repeat(gold.size(0),1,1),
-                          self.tgt_upscale(gold[:,7:]),
+                          self.tgt_upscale(gold),
                           self.eos.weight.unsqueeze(0).repeat(gold.size(0),1,1)],1)
 
         srcs += self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) 
+
         tgts += self.tgt_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) 
 
         mems = self.encoder(srcs.transpose(0,1))

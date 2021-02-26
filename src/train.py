@@ -26,9 +26,9 @@ def evalueate(dataset,model):
     with torch.no_grad():
         for i,(data, gold, true, icds) in enumerate(dataset,1):
             print(f"step:{i}/{len(dataset)}, valid_loss:{loss}, nme:{nme}\r",end="")
-            pred, gold = model(data,gold)
+            pred, gold = model(data,gold[:,7:])
             nme  = nme +(Metrics.normalized_mean_error(pred.detach().to("cpu"),true,icds)-nme)/i
-            loss = loss+(model.loss(pred,gold[:,7:]).item()-loss)/i
+            loss = loss+(model.loss(pred,gold).item()-loss)/i
     model.train()
     return loss, nme
 
@@ -49,8 +49,8 @@ if __name__ == "__main__":
     for epoch in range(model.epoch, configuration.end_epoch):
         configuration.load()
         for i,(data, gold, true, icds) in enumerate(traindataset,1):
-            pred, gold = model(data,gold)
-            loss = model.loss(pred,gold[:,7:])/configuration.mini_step_size
+            pred, gold = model(data,gold[:,7:])
+            loss = model.loss(pred,gold)/configuration.mini_step_size
             loss.backward()
 
             with torch.no_grad():
