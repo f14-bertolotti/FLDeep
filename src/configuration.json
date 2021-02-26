@@ -20,7 +20,7 @@
         "end_epoch"       : { "value":     2000, "comment":                           "for how many epoch should be the model trained" },
         "random_seed"     : { "value":       14, "comment":                             "seed to be used for all random initialization"},
         "device"          : { "value": "cuda:0", "comment":                             "cuda:0 for gpu training, cpu for cpu training"},
-        "show_images"     : { "value":    false, "comment": "true if should step-by-step mode should be used, images will be displayed"},
+        "show_images"     : { "value":     false, "comment": "true if should step-by-step mode should be used, images will be displayed"},
         "steps_to_reload" : { "value":      100, "comment":      "how many mini_step should be done before reloading the configuration"},
         
         "logging_format"  : { "value":"%(levelname)s|%(asctime)s| %(message)s", "comment":"format of the logging"}

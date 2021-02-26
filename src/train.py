@@ -24,11 +24,11 @@ def evalueate(dataset,model):
     loss = 0
     nme  = 0
     with torch.no_grad():
-        for i,(data, gold, true, icds, size, bbox) in enumerate(dataset,1):
+        for i,(data, gold, true, icds) in enumerate(dataset,1):
             print(f"step:{i}/{len(dataset)}, valid_loss:{loss}, nme:{nme}\r",end="")
             pred, gold = model(data,gold)
-            nme  = nme +(Metrics.normalized_mean_error(pred.detach().to("cpu"),true,icds,size,bbox)-nme)/i
-            loss = loss+(model.loss(pred,gold).item()-loss)/i
+            nme  = nme +(Metrics.normalized_mean_error(pred.detach().to("cpu"),true,icds)-nme)/i
+            loss = loss+(model.loss(pred,gold[:,7:]).item()-loss)/i
     model.train()
     return loss, nme
 
@@ -47,17 +47,18 @@ if __name__ == "__main__":
     validdataset = torch.utils.data.DataLoader(validdataset, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)
 
     for epoch in range(model.epoch, configuration.end_epoch):
-        for i,(data, gold, true, icds, size, bbox) in enumerate(traindataset,1):
+        configuration.load()
+        for i,(data, gold, true, icds) in enumerate(traindataset,1):
             pred, gold = model(data,gold)
-            loss = model.loss(pred,gold)/configuration.mini_step_size
+            loss = model.loss(pred,gold[:,7:])/configuration.mini_step_size
             loss.backward()
 
             with torch.no_grad():
-                nme = Metrics.normalized_mean_error(pred.to("cpu"),true,icds,size,bbox)
+                nme = Metrics.normalized_mean_error(pred.to("cpu"),true,icds)
                 stdout_logger.info(f"epoch:{epoch}, step:{i}/{len(traindataset)}, loss:{loss.item()}, nme:{nme}")
                 step_logger  .info(f"epoch:{epoch}, step:{i}/{len(traindataset)}, loss:{loss.item()}, nme:{nme}")
 
-            if configuration.show_images: Image.showall(data,pred,gold,configuration)
+            if configuration.show_images: Image.showall(data.detach().cpu(),pred.detach().cpu(),true.detach().cpu(),configuration)
 
             if not i % configuration.steps_to_reload:
                 configuration.load()

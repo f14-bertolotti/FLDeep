@@ -1,4 +1,3 @@
-from utils.image import Image
 import torchvision
 import random
 import torch
@@ -17,53 +16,52 @@ class Dataset:
                                                         os.listdir(self.dataset_path)))[0])
         self.data = list(map(lambda x:[x.split(" ",1)[0],numpy.array(list(map(float, x.split(" ",1)[1].split(" ")))).reshape(-1,2)], 
                              open(self.annotation_path,"r").read().split(" \n")[:-1]))
-
+    
     @staticmethod
     def collate_fn(data):
         return torch.stack([d[0] for d in data]),\
                torch.stack([d[1] for d in data]),\
                torch.stack([d[2] for d in data]),\
-               torch.stack([d[3] for d in data]),\
-               torch.stack([d[4] for d in data]),\
-               torch.stack([d[5] for d in data])
+               torch.stack([d[3] for d in data])
 
     @staticmethod
-    def np_normalize_annotations(annotations, osize, bbox):
-        return numpy.stack([(annotations[:,0] - bbox[0][0])/osize[1]-.5, (annotations[:,1] - bbox[0][1])/osize[0]-.5],axis=1)
-
-    @staticmethod
-    def np_recover_annotations(annotations, osize, bbox):
-         return numpy.stack([(annotations[:,0]+.5)*osize[1]+bbox[0][0], (annotations[:,1]+.5)*osize[0]+bbox[0][1]],axis=1)
-
-    @staticmethod
-    def th_normalize_annotations(annotations, osize, bbox):
-        return torch.stack([(annotations[:,:,0] - bbox[:,0,0].unsqueeze(-1))/osize[:,1].unsqueeze(-1)-.5, (annotations[:,:,1] - bbox[:,0,1].unsqueeze(-1))/osize[:,0].unsqueeze(-1)-.5],dim=2)
-
-    @staticmethod
-    def th_recover_annotations(annotations, osize, bbox):
-        return torch.stack([(annotations[:,:,0]+.5)*osize[:,1].unsqueeze(-1)+bbox[:,0,0].unsqueeze(-1), (annotations[:,:,1]+.5)*osize[:,0].unsqueeze(-1)+bbox[:,0,1].unsqueeze(-1)],dim=2)
-
-
-       
+    def unnoramlize(pred,true):
+        pred[:,:,0] *= true[:,1,0].unsqueeze(-1)
+        pred[:,:,1] *= true[:,1,1].unsqueeze(-1)
+        pred[:,:,0] += true[:,0,0].unsqueeze(-1)
+        pred[:,:,1] += true[:,0,1].unsqueeze(-1)
+        return pred
 
     def preprocess(self, image_path, annotations):
-        image = cv2.cvtColor(cv2.imread(os.path.join(self.dataset_path, image_path)),cv2.COLOR_BGR2RGB)
-        bbox  = ((annotations[0,0],annotations[0,1]),(annotations[1,0],annotations[1,1]))      
-        image = image[int(round(bbox[0][1])):int(round(bbox[1][1])),int(round(bbox[0][0])):int(round(bbox[1][0]))] 
-        osize = (image.shape[0], image.shape[1])                                              
-        nsize = (self.configuration.image_size[0], self.configuration.image_size[1])       
-        image = cv2.resize(image,(nsize[0],nsize[1]),interpolation=cv2.INTER_NEAREST)
-        inter_corner_distance = numpy.linalg.norm(annotations[36,:] - annotations[45,:])
-        true  = annotations
-        gold  = Dataset.np_normalize_annotations(annotations, osize, bbox)
         
-        data = torch.tensor(image/255             , dtype=torch.float, requires_grad=False)
-        true = torch.tensor(annotations[7:]       , dtype=torch.float, requires_grad=False)
-        gold = torch.tensor(gold[7:]              , dtype=torch.float, requires_grad=False)
-        icds = torch.tensor(inter_corner_distance , dtype=torch.float, requires_grad=False)
-        size = torch.tensor(osize                 , dtype=torch.float, requires_grad=False)
-        bbox = torch.tensor(bbox                  , dtype=torch.float, requires_grad=False)
-        return data, gold, true, icds, size, bbox
+        image  = torchvision.io.read_image(os.path.join(self.dataset_path,image_path)) # get image
+        bimage = [[0,0],[image.shape[2],image.shape[1]]]                               # get shape
+
+        bface = [[annotations[0,0],annotations[0,1]],[annotations[1,0],annotations[1,1]]]                                # get face bbox 
+        face  = torchvision.transforms.functional.crop(image,int(round(annotations[0,1])),int(round(annotations[0,0])),  # get face
+                                                             int(round(annotations[1,1]-annotations[0,1])),              #
+                                                             int(round(annotations[1,0]-annotations[0,0])))              #
+        
+        i,j,h,w = torchvision.transforms.RandomResizedCrop.get_params(face,scale=(0.08, 1.0), ratio=(0.75, 4/3)) # get face crop params
+        bcrop   = [[j+bface[0][0],i+bface[0][1]],[j+bface[0][0]+w,i+bface[0][1]+h]]                              # get face crop bbox 
+        crop    = torchvision.transforms.functional.crop(face,i,j,h,w)                                           # get face crop
+
+        icd = numpy.linalg.norm(annotations[36,:] - annotations[45,:]) # compute normalization factor
+
+        crop_resized = torchvision.transforms.functional.resize(crop, (224,224)) # resnet resolution
+
+        gold = annotations.copy()
+        gold[1:,0] -= annotations[0,0] # center annotations
+        gold[1:,1] -= annotations[0,1] # center annotations
+        gold[2:,0] /= annotations[1,0] # bbox normalized 
+        gold[2:,1] /= annotations[1,1] # bbox normalized
+
+        gold = torch.tensor(gold       , dtype=torch.float, requires_grad=False)
+        true = torch.tensor(annotations, dtype=torch.float, requires_grad=False)
+        icd  = torch.tensor(icd        , dtype=torch.float, requires_grad=False)
+        data = crop_resized.float()/255
+        
+        return data, gold, true, icd
 
     def sample(self):
         return self.preprocess(*random.choice(self.data))
