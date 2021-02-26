@@ -51,17 +51,19 @@ class Model(torch.nn.Module):
         with torch.no_grad():
             data = data.to(self.configuration.device)
             gold = gold.to(self.configuration.device)
-
-            res = self.resnet(self.normalize(data.transpose(1,3)))
+            
+            res = self.resnet(self.normalize(data))
             res = res.view(res.size(0),res.size(1),res.size(2)*res.size(3))
 
         srcs = self.src_upscale(res)
+
         tgts = torch.cat([self.sos.weight.unsqueeze(0).repeat(gold.size(0),1,1),
                           self.tgt_upscale(gold),
                           self.eos.weight.unsqueeze(0).repeat(gold.size(0),1,1)],1)
 
-        srcs += self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) # could position for tgt 
-        tgts += self.tgt_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) # and src be the same ?
+        srcs += self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) 
+
+        tgts += self.tgt_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) 
 
         mems = self.encoder(srcs.transpose(0,1))
         pred = self.decoder(memory=mems, tgt=tgts.transpose(0,1), tgt_mask=self.peek).transpose(0,1)

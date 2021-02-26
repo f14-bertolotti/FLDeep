@@ -28,20 +28,20 @@ if __name__ == "__main__":
     with torch.no_grad():
         loss = None
         nme  = None
-        for i,(data, gold, true, icds, size, bbox) in enumerate(testdataset,1):
+        for i,(data, gold, true, icds) in enumerate(testdataset,1):
             gold = gold.to(configuration.device)
-            pred = torch.zeros(gold.shape).to(configuration.device)
+            pred = torch.zeros(gold[:,7:].shape).to(configuration.device)
             for j in range(34):
                 print(f"step:{i}/{len(testdataset)}, pred:{j}/68, test_loss:{loss}, nme:{nme}\r",end="")
-                tmp = model(data,gold)[0]
+                tmp = model(data,pred)[0]
                 pred[:,j] = tmp[:,j]
                 pred[:,67-j] = tmp[:,67-j]
 
             configuration.load()
             if configuration.show_images: Image.showall(data,pred,gold,configuration)
     
-            loss = loss+(model.loss(pred,gold).item()-loss)/i if loss else model.loss(pred,gold).item()
-            nme  = nme +(Metrics.normalized_mean_error(pred.to("cpu"),true,icds,size,bbox).item()-nme)/i if nme else Metrics.normalized_mean_error(pred.to("cpu"),true,icds,size,bbox).item()
+            loss = loss+(model.loss(pred,gold[:,7:]).item()-loss)/i if loss else model.loss(pred,gold[:,7:]).item()
+            nme  = nme +(Metrics.normalized_mean_error(pred.to("cpu"),true,icds).item()-nme)/i if nme else Metrics.normalized_mean_error(pred.to("cpu"),true,icds).item()
 
     logging.info(f"epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{loss}, nme:{nme}")
     
