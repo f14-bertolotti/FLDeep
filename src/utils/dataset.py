@@ -8,7 +8,8 @@ import os
 random.seed(14)
 
 class Dataset:
-    def __init__(self, path, configuration):
+    def __init__(self, path, configuration, mode="train"):
+        self.mode            = mode
         self.dataset_path    = path
         self.configuration   = configuration
         self.annotation_path = os.path.join(self.dataset_path,
@@ -16,7 +17,7 @@ class Dataset:
                                                         os.listdir(self.dataset_path)))[0])
         self.data = list(map(lambda x:[x.split(" ",1)[0],numpy.array(list(map(float, x.split(" ",1)[1].split(" ")))).reshape(-1,2)], 
                              open(self.annotation_path,"r").read().split(" \n")[:-1]))
-    
+
     @staticmethod
     def collate_fn(data):
         return torch.stack([d[0] for d in data]),\
@@ -34,7 +35,7 @@ class Dataset:
 
     def preprocess(self, image_path, annotations):
         #image = torchvision.io.read_image(os.path.join(self.dataset_path,image_path)) # get image 
-        image = torch.tensor(cv2.cvtColor(cv2.imread(os.path.join(self.dataset_path, image_path)),cv2.COLOR_BGR2RGB), dtype=torch.float, requires_grad=False).transpose(0,2).transpose(1,2)
+        image = torch.tensor(cv2.cvtColor(cv2.imread(os.path.join(self.dataset_path, image_path)),cv2.COLOR_BGR2RGB), dtype=torch.float, requires_grad=False).transpose(0,2).transpose(1,2)/255
         bimage = [[0,0],[image.shape[2],image.shape[1]]]                               # get shape
 
         bface = [[annotations[0,0],annotations[0,1]],[annotations[1,0],annotations[1,1]]]                                # get face bbox 
@@ -43,6 +44,7 @@ class Dataset:
                                                              int(round(annotations[1,0]-annotations[0,0])))              #
         
         i,j,h,w = torchvision.transforms.RandomResizedCrop.get_params(face,scale=(0.08, 1.0), ratio=(0.75, 4/3)) # get face crop params
+        if self.mode == "test": i,j,w,h = 0,0,int(round(bface[1][0]-bface[0][0])),int(round(bface[1][1]-bface[0][1]))
         bcrop   = [[j+bface[0][0],i+bface[0][1]],[j+bface[0][0]+w,i+bface[0][1]+h]]                              # get face crop bbox 
         crop    = torchvision.transforms.functional.crop(face,i,j,h,w)                                           # get face crop
 
@@ -59,7 +61,7 @@ class Dataset:
         gold = torch.tensor(gold       , dtype=torch.float, requires_grad=False)
         true = torch.tensor(annotations, dtype=torch.float, requires_grad=False)
         icd  = torch.tensor(icd        , dtype=torch.float, requires_grad=False)
-        data = crop_resized.float()/255
+        data = crop_resized.float()
         
 
         return data, gold, true, icd
