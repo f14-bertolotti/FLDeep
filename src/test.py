@@ -21,7 +21,7 @@ if __name__ == "__main__":
     model.eval()
     logging.info(f"testing epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{model.test_loss}")
     
-    testdataset = Dataset(configuration.test_path,configuration)
+    testdataset = Dataset(configuration.test_path,configuration, mode="test")
     
     testdataset = torch.utils.data.DataLoader(testdataset, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)
    
