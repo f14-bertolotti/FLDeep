@@ -40,8 +40,8 @@ if __name__ == "__main__":
     model.train()
     stdout_logger.info(("resuming" if configuration.restore else "training") + f" epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{model.test_loss}")
 
-    traindataset = Dataset(     configuration.train_path,configuration,mode="train")
-    validdataset = Dataset(configuration.validation_path,configuration,mode= "test")
+    traindataset = Dataset(     configuration.train_path,configuration,docrop=True)
+    validdataset = Dataset(configuration.validation_path,configuration,docrop=False)
 
     traindataset = torch.utils.data.DataLoader(traindataset, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10, shuffle=True)
     validdataset = torch.utils.data.DataLoader(validdataset, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)

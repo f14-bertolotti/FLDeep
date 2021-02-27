@@ -8,8 +8,8 @@ import os
 random.seed(14)
 
 class Dataset:
-    def __init__(self, path, configuration, mode="train"):
-        self.mode            = mode
+    def __init__(self, path, configuration, docrop=True):
+        self.docrop          = docrop
         self.dataset_path    = path
         self.configuration   = configuration
         self.annotation_path = os.path.join(self.dataset_path,
@@ -44,7 +44,7 @@ class Dataset:
                                                              int(round(annotations[1,0]-annotations[0,0])))              #
         
         i,j,h,w = torchvision.transforms.RandomResizedCrop.get_params(face,scale=(0.08, 1.0), ratio=(0.75, 4/3)) # get face crop params
-        if self.mode == "test": i,j,w,h = 0,0,int(round(bface[1][0]-bface[0][0])),int(round(bface[1][1]-bface[0][1]))
+        if self.docrop: i,j,w,h = 0,0,int(round(bface[1][0]-bface[0][0])),int(round(bface[1][1]-bface[0][1]))
         bcrop   = [[j+bface[0][0],i+bface[0][1]],[j+bface[0][0]+w,i+bface[0][1]+h]]                              # get face crop bbox 
         crop    = torchvision.transforms.functional.crop(face,i,j,h,w)                                           # get face crop
 

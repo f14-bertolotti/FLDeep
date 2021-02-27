@@ -21,7 +21,7 @@ if __name__ == "__main__":
     model.eval()
     logging.info(f"testing epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{model.test_loss}")
     
-    testdataset = Dataset(configuration.test_path,configuration, mode="test")
+    testdataset = Dataset(configuration.test_path,configuration, docrop=False)
     
     testdataset = torch.utils.data.DataLoader(testdataset, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)
    
@@ -38,7 +38,7 @@ if __name__ == "__main__":
                 pred[:,67-j] = tmp[:,67-j]
 
             configuration.load()
-            if configuration.show_images: Image.showall(data,pred,gold,configuration)
+            if configuration.show_images: Image.showall(data,pred.cpu(),true,configuration)
     
             loss = loss+(model.loss(pred,gold[:,7:]).item()-loss)/i if loss else model.loss(pred,gold[:,7:]).item()
             nme  = nme +(Metrics.normalized_mean_error(pred.to("cpu"),true,icds).item()-nme)/i if nme else Metrics.normalized_mean_error(pred.to("cpu"),true,icds).item()
