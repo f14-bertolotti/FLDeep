@@ -13,8 +13,8 @@
         "epoch_log_path"  : { "value": "../model/epoch_log", "comment":        "where the log (for each epoch) should be done, false for no logging" },
         "step_log_path"   : { "value":                false, "comment":          "where the log (for each step) should be done, false for no logging"},
         "verbose"         : { "value":                 true, "comment":                              "should logging steps be printed on std output" },
-        
-	"restore"         : { "value":    false, "comment":             "should a stored model be loaded? when testing should be true" },
+       	
+        "restore"         : { "value":    true, "comment":             "should a stored model be loaded? when testing should be true" },
         "mini_step_size"  : { "value":        1, "comment":                             "how many step to do before a gradient update" },
         "batch_size"      : { "value":       32, "comment":                             "number of batches to be used during training" },
         "end_epoch"       : { "value":     2000, "comment":                           "for how many epoch should be the model trained" },

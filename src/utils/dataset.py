@@ -44,7 +44,7 @@ class Dataset:
                                                              int(round(annotations[1,0]-annotations[0,0])))              #
         
         i,j,h,w = torchvision.transforms.RandomResizedCrop.get_params(face,scale=(0.08, 1.0), ratio=(0.75, 4/3)) # get face crop params
-        if self.docrop: i,j,w,h = 0,0,int(round(bface[1][0]-bface[0][0])),int(round(bface[1][1]-bface[0][1]))
+        if not self.docrop: i,j,w,h = 0,0,int(round(bface[1][0]-bface[0][0])),int(round(bface[1][1]-bface[0][1]))
         bcrop   = [[j+bface[0][0],i+bface[0][1]],[j+bface[0][0]+w,i+bface[0][1]+h]]                              # get face crop bbox 
         crop    = torchvision.transforms.functional.crop(face,i,j,h,w)                                           # get face crop
 

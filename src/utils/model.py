@@ -58,7 +58,6 @@ class SaveModel:
 
     def save(self, name="", epoch=0, valid_loss=float("inf")):
         path = os.path.join(os.path.dirname(self.configuration.model_path), name + os.path.basename(self.configuration.model_path))
-        self.valid_loss = valid_loss
         torch.save({
             "configuration" : self.configuration.configuration,
               "optimizersd" : self.model.optimizer.state_dict(),
