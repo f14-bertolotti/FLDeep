@@ -11,7 +11,7 @@ class SaveModel:
         self.configuration = configuration
         self.code = pathlib.Path(self.configuration.class_path).read_text()
         self.epoch      = 0
-        self.valid_loss = float("inf")
+        self.best       = float("inf")
         self.test_loss  = float("inf")
         if self.configuration.restore: self.load()
         else: self.model = SaveModel.import_code(self.code, "model").Model(configuration=configuration)
@@ -34,7 +34,7 @@ class SaveModel:
         optimizersd   = checkpoint[  "optimizersd"]
         modelsd       = checkpoint[      "modelsd"] 
         code          = checkpoint[         "code"]
-        valid_loss    = checkpoint[   "valid_loss"] if "valid_loss" in checkpoint else self.valid_loss
+        best          = checkpoint[         "best"] if       "best" in checkpoint else self.best
         test_loss     = checkpoint[    "test_loss"] if  "test_loss" in checkpoint else  self.test_loss
         epoch         = checkpoint[        "epoch"] if      "epoch" in checkpoint else      self.epoch
         cudarng       = checkpoint[      "cudarng"]
@@ -48,7 +48,7 @@ class SaveModel:
         numpy.random.set_state(nprng)
 
         self.code = code
-        self.valid_loss = valid_loss
+        self.best = best
         self.test_loss  = test_loss
         self.epoch = epoch
         self.configuration.configuration.update(configuration)
@@ -56,14 +56,14 @@ class SaveModel:
         self.model.load_state_dict(modelsd)
         self.model.optimizer.load_state_dict(optimizersd)
 
-    def save(self, name="", epoch=0, valid_loss=float("inf")):
+    def save(self, name="", epoch=0, best=float("inf")):
         path = os.path.join(os.path.dirname(self.configuration.model_path), name + os.path.basename(self.configuration.model_path))
         torch.save({
             "configuration" : self.configuration.configuration,
               "optimizersd" : self.model.optimizer.state_dict(),
                   "modelsd" : self.model.state_dict(),
                      "code" : self.code,
-               "valid_loss" : self.valid_loss,
+                     "best" : self.best,
                   "cudarng" : torch.cuda.get_rng_state(),
                    "cpurng" : torch.get_rng_state(),
                     "nprng" : numpy.random.get_state(),
@@ -72,16 +72,16 @@ class SaveModel:
             }, path)
     
 
-    def save_if_best(self, name="", epoch=0, valid_loss=float("inf")):
+    def save_if_best(self, name="", epoch=0, best=float("inf")):
         path = os.path.join(os.path.dirname(self.configuration.model_path), name + os.path.basename(self.configuration.model_path))
-        if valid_loss < self.valid_loss:
-            self.valid_loss = valid_loss
+        if best < self.best:
+            self.best = best
             torch.save({
                 "configuration" : self.configuration.configuration,
                   "optimizersd" : self.model.optimizer.state_dict(),
                       "modelsd" : self.model.state_dict(),
                          "code" : self.code,
-                   "valid_loss" : self.valid_loss,
+                         "best" : self.best,
                       "cudarng" : torch.cuda.get_rng_state(),
                        "cpurng" : torch.get_rng_state(),
                         "nprng" : numpy.random.get_state(),

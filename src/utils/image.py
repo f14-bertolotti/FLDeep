@@ -15,9 +15,10 @@ class Image:
 
 
     @staticmethod
-    def showall(images, preds, trues, configuration):
-        pred = Dataset.unnoramlize(preds,trues) 
-        for image, p, g in zip(images, preds, trues):
-            Image.show(image.transpose(0,2).transpose(0,1),p.unsqueeze(0),g.unsqueeze(0))
+    def showall(images, preds, golds, configuration):
+        for image, p, g in zip(images, preds, golds):
+            Image.show(image.transpose(0,2).transpose(0,1).cpu().numpy(),
+                       p[7:].unsqueeze(0).cpu().numpy(),
+                       g[7:].unsqueeze(0).cpu().numpy())
         
 
