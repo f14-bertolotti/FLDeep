@@ -6,7 +6,7 @@ import torch
 class Model(torch.nn.Module):
     def __init__(self, configuration):
         super(Model,self).__init__()
-    
+
         self.configuration = configuration
 
         self.resnet = torchvision.models.resnet18(pretrained=True, progress=True).to(configuration.device)
@@ -30,7 +30,7 @@ class Model(torch.nn.Module):
 
         self.loss         = torch.nn.L1Loss(reduction="sum")
         self.optimizer    = torch.optim.Adam(self.parameters(),lr=0.0001)
-    
+
     @staticmethod
     def generate_square_subsequent_mask(sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
@@ -38,37 +38,34 @@ class Model(torch.nn.Module):
         return mask
 
     @staticmethod
-    def generate_hourglass_subsequent_mask(sz): 
-        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1).logical_or( 
-               (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1).flip(1)) 
+    def generate_hourglass_subsequent_mask(sz):
+        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1).logical_or(
+               (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1).flip(1))
         mask = mask.logical_and(mask.flip(0))
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0)) 
-        return mask 
-
-
+        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
+        return mask
 
     def forward(self, data, gold):
         with torch.no_grad():
             data = data.to(self.configuration.device)
             gold = gold.to(self.configuration.device)
-            
+
             res = self.resnet(self.normalize(data))
             res = res.view(res.size(0),res.size(1),res.size(2)*res.size(3))
 
         srcs = self.src_upscale(res)
 
         tgts = torch.cat([self.sos.weight.unsqueeze(0).repeat(gold.size(0),1,1),
-                          self.tgt_upscale(gold),
+            self.tgt_upscale(gold[:,7:]),
                           self.eos.weight.unsqueeze(0).repeat(gold.size(0),1,1)],1)
 
-        srcs += self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) 
+        srcs += self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1)
 
-        tgts += self.tgt_position.weight.unsqueeze(0).repeat(gold.size(0),1,1) 
+        tgts += self.tgt_position.weight.unsqueeze(0).repeat(gold.size(0),1,1)
 
         mems = self.encoder(srcs.transpose(0,1))
         pred = self.decoder(memory=mems, tgt=tgts.transpose(0,1), tgt_mask=self.peek).transpose(0,1)
         ldmk = self.downscale(pred)
         ldmk = torch.cat([ldmk[:,:ldmk.size(1)//2-1],ldmk[:,ldmk.size(1)//2+1:]],1)
 
-        return ldmk, gold
-
+        return torch.cat([gold[:,:7],ldmk],1)

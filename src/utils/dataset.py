@@ -9,7 +9,6 @@ random.seed(14)
 
 class Dataset:
     def __init__(self, path, configuration, docrop=True):
-        self.docrop          = docrop
         self.dataset_path    = path
         self.configuration   = configuration
         self.annotation_path = os.path.join(self.dataset_path,
@@ -22,49 +21,41 @@ class Dataset:
     def collate_fn(data):
         return torch.stack([d[0] for d in data]),\
                torch.stack([d[1] for d in data]),\
-               torch.stack([d[2] for d in data]),\
-               torch.stack([d[3] for d in data])
+               torch.stack([d[2] for d in data])
 
-    @staticmethod
-    def unnoramlize(pred,true):
-        pred[:,:,0] *= true[:,1,0].unsqueeze(-1)
-        pred[:,:,1] *= true[:,1,1].unsqueeze(-1)
-        pred[:,:,0] += true[:,0,0].unsqueeze(-1)
-        pred[:,:,1] += true[:,0,1].unsqueeze(-1)
-        return pred
+    def annotation_forward(self,gold):
+        gold[1:,0] -= gold[0,0]
+        gold[1:,1] -= gold[0,1]
+        gold[2:,0] /= gold[1,0] / self.configuration.image_size[0]
+        gold[2:,1] /= gold[1,1] / self.configuration.image_size[1]
+        gold[3:,0] -= self.configuration.image_size[0] / 2
+        gold[3:,1] -= self.configuration.image_size[1] / 2
+        return gold
+
+    def annotation_backward(self,gold):
+        gold[3:,0] += self.configuration.image_size[0] / 2
+        gold[3:,1] += self.configuration.image_size[1] / 2
+        gold[2:,1] *= gold[1,1] / self.configuration.image_size[1]
+        gold[2:,0] *= gold[1,0] / self.configuration.image_size[0]
+        gold[1:,1] += gold[0,1]
+        gold[1:,0] += gold[0,0]
+        return gold
 
     def preprocess(self, image_path, annotations):
-        #image = torchvision.io.read_image(os.path.join(self.dataset_path,image_path)) # get image 
-        image = torch.tensor(cv2.cvtColor(cv2.imread(os.path.join(self.dataset_path, image_path)),cv2.COLOR_BGR2RGB), dtype=torch.float, requires_grad=False).transpose(0,2).transpose(1,2)/255
-        bimage = [[0,0],[image.shape[2],image.shape[1]]]                               # get shape
+        image = torch.tensor(cv2.cvtColor(cv2.imread(os.path.join(self.dataset_path, image_path)),cv2.COLOR_BGR2RGB), dtype=torch.float, requires_grad=False).transpose(0,2).transpose(1,2)/256
 
-        bface = [[annotations[0,0],annotations[0,1]],[annotations[1,0],annotations[1,1]]]                                # get face bbox 
         face  = torchvision.transforms.functional.crop(image,int(round(annotations[0,1])),int(round(annotations[0,0])),  # get face
                                                              int(round(annotations[1,1]-annotations[0,1])),              #
                                                              int(round(annotations[1,0]-annotations[0,0])))              #
         
-        i,j,h,w = torchvision.transforms.RandomResizedCrop.get_params(face,scale=(0.08, 1.0), ratio=(0.75, 4/3)) # get face crop params
-        if not self.docrop: i,j,w,h = 0,0,int(round(bface[1][0]-bface[0][0])),int(round(bface[1][1]-bface[0][1]))
-        bcrop   = [[j+bface[0][0],i+bface[0][1]],[j+bface[0][0]+w,i+bface[0][1]+h]]                              # get face crop bbox 
-        crop    = torchvision.transforms.functional.crop(face,i,j,h,w)                                           # get face crop
+        face = torchvision.transforms.functional.resize(face,self.configuration.image_size)
 
-        icd = numpy.linalg.norm(annotations[36,:] - annotations[45,:]) # compute normalization factor
-
-        crop_resized = torchvision.transforms.functional.resize(crop, (224,224)) # resnet resolution
-
-        gold = annotations.copy()
-        gold[1:,0] -= annotations[0,0] # center annotations
-        gold[1:,1] -= annotations[0,1] # center annotations
-        gold[2:,0] /= annotations[1,0] # bbox normalized 
-        gold[2:,1] /= annotations[1,1] # bbox normalized
-
-        gold = torch.tensor(gold       , dtype=torch.float, requires_grad=False)
         true = torch.tensor(annotations, dtype=torch.float, requires_grad=False)
-        icd  = torch.tensor(icd        , dtype=torch.float, requires_grad=False)
-        data = crop_resized.float()
-        
+        gold = self.annotation_forward(true.clone())
 
-        return data, gold, true, icd
+        assert((self.annotation_backward(gold.clone())-true).sum()<1e10-5)
+
+        return face, gold, true
 
     def sample(self):
         return self.preprocess(*random.choice(self.data))
