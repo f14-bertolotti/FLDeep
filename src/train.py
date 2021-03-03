@@ -25,7 +25,7 @@ def evalueate(dataset,model):
     nme  = 0
     with torch.no_grad():
         for i,(data, gold, true) in enumerate(dataset,1):
-            print(f"step:{i}/{len(dataset)}, valid_loss:{loss}, nme:{nme}\r",end="")
+            print("step:{}/{}, valid_loss:{: >3.5f}, nme:{: >3.5f}\r".format(i,len(dataset),loss,nme),end="")
             data = data.to(configuration.device)
             gold = gold.to(configuration.device)
             true = true.to(configuration.device)
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     stdout_logger.info(f"{__file__.upper()} STARTING")
     model = SaveModel(configuration) 
     model.train()
-    stdout_logger.info(("resuming" if configuration.restore else "training") + f" epoch:{model.epoch}, best:{model.best}, test_loss:{model.test_loss}")
+    stdout_logger.info(("resuming" if configuration.restore else "training") + " epoch:{model.epoch}, best:{model.best}, test_loss:{model.test_loss}")
 
     train = Dataset(     configuration.train_path,configuration,docrop=True)
     valid = Dataset(configuration.validation_path,configuration,docrop=False)
@@ -69,8 +69,8 @@ if __name__ == "__main__":
 
             with torch.no_grad():
                 nme = Metrics.normalized_mean_error(pred,true,train)
-                stdout_logger.info(f"epoch:{epoch}, step:{i}/{len(traindataset)}, loss:{loss.item()}, nme:{nme}")
-                step_logger  .info(f"epoch:{epoch}, step:{i}/{len(traindataset)}, loss:{loss.item()}, nme:{nme}")
+                stdout_logger.info("epoch:{}, step:{}/{}, loss:{: >3.5f}, nme:{: >3.5f}".format(epoch,i,len(traindataset),loss.item(),nme))
+                step_logger  .info("epoch:{}, step:{}/{}, loss:{: >3.5f}, nme:{: >3.5f}".format(epoch,i,len(traindataset),loss.item(),nme))
 
                 if configuration.show_images: Image.showall(data,pred,gold,configuration)
 
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         valid_loss,valid_nme = evalueate(validdataset, model)
         isbest = model.save_if_best(name="best", epoch=epoch+1, best=valid_nme)
         model.save(epoch=epoch+1, best=valid_nme)
-        stdout_logger.info(f"EPOCH DONE. epoch:{epoch}, loss:{valid_loss}, nme:{valid_nme}" + (" +" if isbest else ""))
-        epoch_logger .info(f"EPOCH DONE. epoch:{epoch}, loss:{valid_loss}, nme:{valid_nme}" + (" +" if isbest else ""))
+        stdout_logger.info("EPOCH DONE. epoch:{}, loss:{: >3.5f}, nme:{: >3.5f}".format(epoch,valid_loss,valid_nme) + (" +" if isbest else ""))
+        epoch_logger .info("EPOCH DONE. epoch:{}, loss:{: >3.5f}, nme:{: >3.5f}".format(epoch,valid_loss,valid_nme) + (" +" if isbest else ""))
 
     stdout_logger.info(f"{__file__.upper()} ENDING")

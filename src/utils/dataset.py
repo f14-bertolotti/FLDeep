@@ -61,7 +61,7 @@ class Dataset:
         return self.preprocess(*random.choice(self.data))
 
     def __getitem__(self,i):
-        return self.preprocess(*self.data[0])
+        return self.preprocess(*self.data[i])
 
     def __iter__(self):
         return iter(map(lambda x:self.preprocess(*x), self.data))
