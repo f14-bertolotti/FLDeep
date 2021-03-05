@@ -19,31 +19,27 @@ if __name__ == "__main__":
     logging.info(f"{__file__.upper()} STARTING")
     model = SaveModel(configuration) 
     model.eval()
-    logging.info(f"testing epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{model.test_loss}")
+    logging.info(f"testing epoch:{model.epoch}, valid_nme:{model.best}")
     
-    testdataset = Dataset(configuration.test_path,configuration, docrop=False)
-    
-    testdataset = torch.utils.data.DataLoader(testdataset, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)
+    test = Dataset(configuration.test_path,configuration, docrop=False)
+    testdataset = torch.utils.data.DataLoader(test, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)
    
     with torch.no_grad():
         loss = None
         nme  = None
-        for i,(data, gold, true, icds) in enumerate(testdataset,1):
+        for i,(data, gold, true) in enumerate(testdataset,1):
             gold = gold.to(configuration.device)
-            pred = torch.zeros(gold[:,7:].shape).to(configuration.device)
-            for j in range(34):
-                print(f"step:{i}/{len(testdataset)}, pred:{j}/68, test_loss:{loss}, nme:{nme}\r",end="")
-                tmp = model(data,pred)[0]
-                pred[:,j] = tmp[:,j]
-                pred[:,67-j] = tmp[:,67-j]
+            true = true.to(configuration.device)
+            pred = torch.zeros(gold.shape).to(configuration.device)
+            pred = model(data,gold)
 
             configuration.load()
             if configuration.show_images: Image.showall(data,pred.cpu(),true,configuration)
     
-            loss = loss+(model.loss(pred,gold[:,7:]).item()-loss)/i if loss else model.loss(pred,gold[:,7:]).item()
-            nme  = nme +(Metrics.normalized_mean_error(pred.to("cpu"),true,icds).item()-nme)/i if nme else Metrics.normalized_mean_error(pred.to("cpu"),true,icds).item()
+            loss = loss+(model.loss(pred[:,7:],gold[:,7:]).item()-loss)/i if loss else model.loss(pred[:,7:],gold[:,7:]).item()
+            nme  = nme +(Metrics.normalized_mean_error(pred,true,test).item()-nme)/i if nme else Metrics.normalized_mean_error(pred,true,test).item()
 
-    logging.info(f"epoch:{model.epoch}, valid_loss:{model.valid_loss}, test_loss:{loss}, nme:{nme}")
+    logging.info(f"epoch:{model.epoch}, valid_nme:{model.best}, nme:{nme}")
     
     logging.info(f"{__file__.upper()} STARTING")
  

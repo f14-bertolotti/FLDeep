@@ -12,7 +12,6 @@ class SaveModel:
         self.code = pathlib.Path(self.configuration.class_path).read_text()
         self.epoch      = 0
         self.best       = float("inf")
-        self.test_loss  = float("inf")
         if self.configuration.restore: self.load()
         else: self.model = SaveModel.import_code(self.code, "model").Model(configuration=configuration)
 
@@ -35,7 +34,6 @@ class SaveModel:
         modelsd       = checkpoint[      "modelsd"] 
         code          = checkpoint[         "code"]
         best          = checkpoint[         "best"] if       "best" in checkpoint else self.best
-        test_loss     = checkpoint[    "test_loss"] if  "test_loss" in checkpoint else  self.test_loss
         epoch         = checkpoint[        "epoch"] if      "epoch" in checkpoint else      self.epoch
         cudarng       = checkpoint[      "cudarng"]
         cpurng        = checkpoint[       "cpurng"]
@@ -49,7 +47,6 @@ class SaveModel:
 
         self.code = code
         self.best = best
-        self.test_loss  = test_loss
         self.epoch = epoch
         self.configuration.configuration.update(configuration)
         self.model = SaveModel.import_code(code, "model").Model(self.configuration)
