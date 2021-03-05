@@ -25,14 +25,14 @@ def evalueate(dataset,model):
     nme  = 0
     with torch.no_grad():
         for i,(data, gold, true) in enumerate(dataset,1):
-            print("step:{}/{}, valid_loss:{: >3.5f}, nme:{: >3.5f}\r".format(i,len(dataset),loss,nme),end="")
+            print("step:{}/{}, best:{: >3.5f}, nme:{: >3.5f}\r".format(i,len(dataset),loss,nme),end="")
             data = data.to(configuration.device)
             gold = gold.to(configuration.device)
             true = true.to(configuration.device)
 
             pred = model(data,gold)
             nme  = nme +(Metrics.normalized_mean_error(pred,true,valid)-nme)/i
-            loss = loss+(model.loss(pred,gold).item()-loss)/i
+            loss = loss+(model.loss(pred[:,7:],gold[:,7:]).item()-loss)/i
     model.train()
     return loss, nme
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     stdout_logger.info(f"{__file__.upper()} STARTING")
     model = SaveModel(configuration) 
     model.train()
-    stdout_logger.info(("resuming" if configuration.restore else "training") + " epoch:{model.epoch}, best:{model.best}, test_loss:{model.test_loss}")
+    stdout_logger.info(("resuming" if configuration.restore else "training") + f" epoch:{model.epoch}, best:{model.best}")
 
     train = Dataset(     configuration.train_path,configuration,docrop=True)
     valid = Dataset(configuration.validation_path,configuration,docrop=False)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
             pred = model(data,gold)
 
-            loss = model.loss(pred,gold)/configuration.mini_step_size
+            loss = model.loss(pred[:,7:],gold[:,7:])/configuration.mini_step_size
             loss.backward()
 
             if not i % configuration.steps_to_reload: configuration.load()
