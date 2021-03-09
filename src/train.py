@@ -43,12 +43,13 @@ if __name__ == "__main__":
     model = SaveModel(configuration) 
     model.train()
     stdout_logger.info(("resuming" if configuration.restore else "training") + f" epoch:{model.epoch}, best:{model.best}")
+    epoch_logger.info(f"all_parameters {model.all_parameters}, trainable_parameters {model.trainable_parameters}")
 
-    train = Dataset(     configuration.train_path,configuration,docrop=True)
-    valid = Dataset(configuration.validation_path,configuration,docrop=False)
+    train = Dataset(     configuration.train_path,configuration,do_augmentation=True)
+    valid = Dataset(configuration.validation_path,configuration,do_augmentation=False)
 
-    traindataset = torch.utils.data.DataLoader(train, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=0, shuffle=False) ############## TODO
-    validdataset = torch.utils.data.DataLoader(valid, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=0)
+    traindataset = torch.utils.data.DataLoader(train, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1,prefetch_factor=1000, shuffle=True) 
+    validdataset = torch.utils.data.DataLoader(valid, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1,prefetch_factor=1000)
 
     for epoch in range(model.epoch, configuration.end_epoch):
         configuration.load()
@@ -65,7 +66,6 @@ if __name__ == "__main__":
 
             if not i % configuration.steps_to_reload: configuration.load()
             if not i % configuration.mini_step_size: model.optimizer.step(); model.optimizer.zero_grad()
-            
 
             with torch.no_grad():
                 nme = Metrics.normalized_mean_error(pred,true,train)
