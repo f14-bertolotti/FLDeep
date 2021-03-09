@@ -31,6 +31,9 @@ class Model(torch.nn.Module):
         self.loss         = torch.nn.L1Loss(reduction="sum")
         self.optimizer    = torch.optim.Adam(self.parameters(),lr=0.0001)
 
+        self.all_parameters = sum(p.numel() for p in self.parameters())
+        self.trainable_parameters = sum(p.numel() for p in self.parameters() if p.requires_grad)
+
     @staticmethod
     def generate_square_subsequent_mask(sz):
         mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
