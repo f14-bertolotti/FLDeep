@@ -1,6 +1,7 @@
 
 from math import sin, cos, radians
 import torchvision
+import einops
 import torch
 
 import matplotlib.pyplot as plt
@@ -9,24 +10,25 @@ class Augment:
     def __init__(self, configuration):
         self.configuration = configuration
 
-    def random_rotate(self, image, annot):
+    def random_rotate(self, images, annots):
 
-        angle = torchvision.transforms.RandomRotation.get_params([-self.configuration.augmentation_angle,self.configuration.augmentation_angle])
-        pivot = torch.tensor([annot[0,0] + (annot[1,0] - annot[0,0])/2, annot[0,1] + (annot[1,1] - annot[0,1])/2])
-        image = torchvision.transforms.functional.rotate(image,angle,center=pivot.tolist())
-        angle = radians(-angle)
-        rmatr = torch.tensor([[cos(angle),-sin(angle)],[sin(angle),cos(angle)]])
-        annot[2:] = torch.einsum("ij,kj -> ki",rmatr,annot[2:]-pivot)+pivot
+        # sample rotations
+        angles = torch.empty(images.size(0)).uniform_(-self.configuration.augmentation_angle, self.configuration.augmentation_angle).to(self.configuration.device)
+        # apply rotations to images
+        images = torch.stack([torchvision.transforms.functional.rotate(img,ang.item(),center=(self.configuration.image_size[0]/2,self.configuration.image_size[1]/2)) for img,ang in zip(images,angles)],0)
+        # compute rotation matrices
+        angles = einops.repeat(angles.deg2rad(),"i -> i h w ", h=2,w=2)*-1
+        angles[:,0,0].cos_(); angles[:,0,1].sin_().mul_(-1); angles[:,1,0].sin_(); angles[:,1,1].cos_()
+        # apply rotation matrices
+        annots[:,2:] = torch.einsum("bij,bkj -> bki",angles,annots[:,2:])
+ 
+        return images, annots
 
-        return image, annot
-
-    def random_flip(self, image, annot):
-        
+    def random_flip(self, images, annots):
+ 
         if torch.rand(1) < self.configuration.augmentation_flipprob:
-            pivot = torch.tensor([image.size(2),image.size(1)])/2
-            image = torchvision.transforms.functional.hflip(image) 
-            annot[:,0] = ((annot[:]-pivot)*-1+pivot)[:,0]
-            annot[0,0],annot[1,0] = annot[1,0].item(),annot[0,0].item()
+            images.data = images.flip(-1) # flip image
+            annots[:,2:,0].mul_(-1)       # flip annotations
 
-        return image, annot
+        return images, annots
 
