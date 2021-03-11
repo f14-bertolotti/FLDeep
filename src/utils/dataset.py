@@ -10,7 +10,7 @@ import os
 random.seed(14)
 
 class Dataset:
-    def __init__(self, path, configuration, do_augmentation=True):
+    def __init__(self, path, configuration):
         self.dataset_path    = path
         self.configuration   = configuration
         self.annotation_path = os.path.join(self.dataset_path,
@@ -18,9 +18,6 @@ class Dataset:
                                                         os.listdir(self.dataset_path)))[0])
         self.data = list(map(lambda x:[x.split(" ",1)[0],numpy.array(list(map(float, x.split(" ",1)[1].split(" ")))).reshape(-1,2)], 
                              open(self.annotation_path,"r").read().split(" \n")[:-1]))
-
-        self.augment = Augment(configuration)
-        self.do_augmentation = do_augmentation
 
     @staticmethod
     def collate_fn(data):
@@ -50,8 +47,6 @@ class Dataset:
         image = torch.tensor(cv2.cvtColor(cv2.imread(os.path.join(self.dataset_path, image_path)),cv2.COLOR_BGR2RGB), dtype=torch.float, requires_grad=False).transpose(0,2).transpose(1,2)/256
         true  = torch.tensor(annotations, dtype=torch.float, requires_grad=False)
         
-        if self.configuration.do_augmentation and self.do_augmentation: image, true = self.augment.random_flip(*self.augment.random_rotate(image,true))
-
         true[0,0],true[0,1],true[1,0],true[1,1] = max(true[0,0],0),max(true[0,1],0),max(true[1,0],0),max(true[1,1],0)
         face  = torchvision.transforms.functional.crop(image,int(true[0,1].round()),int(true[0,0].round()),  # get face
                                                              int((true[1,1]-true[0,1]).round()),             #

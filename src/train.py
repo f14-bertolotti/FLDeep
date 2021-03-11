@@ -45,19 +45,18 @@ if __name__ == "__main__":
     stdout_logger.info(("resuming" if configuration.restore else "training") + f" epoch:{model.epoch}, best:{model.best}")
     epoch_logger.info(f"all_parameters {model.all_parameters}, trainable_parameters {model.trainable_parameters}")
 
-    train = Dataset(     configuration.train_path,configuration,do_augmentation=True)
-    valid = Dataset(configuration.validation_path,configuration,do_augmentation=False)
+    train = Dataset(     configuration.train_path,configuration)
+    valid = Dataset(configuration.validation_path,configuration)
 
     traindataset = torch.utils.data.DataLoader(train, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1,prefetch_factor=1000, shuffle=True) 
     validdataset = torch.utils.data.DataLoader(valid, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1,prefetch_factor=1000)
 
     for epoch in range(model.epoch, configuration.end_epoch):
         configuration.load()
-        for i,(data, gold, true) in enumerate(traindataset,1):
+        for i,(data, gold, _) in enumerate(traindataset,1):
 
             data = data.to(configuration.device)
             gold = gold.to(configuration.device)
-            true = true.to(configuration.device)
 
             pred = model(data,gold)
 
@@ -68,9 +67,8 @@ if __name__ == "__main__":
             if not i % configuration.mini_step_size: model.optimizer.step(); model.optimizer.zero_grad()
 
             with torch.no_grad():
-                nme = Metrics.normalized_mean_error(pred,true,train)
-                stdout_logger.info("epoch:{}, step:{}/{}, loss:{: >3.5f}, nme:{: >3.5f}".format(epoch,i,len(traindataset),loss.item(),nme))
-                step_logger  .info("epoch:{}, step:{}/{}, loss:{: >3.5f}, nme:{: >3.5f}".format(epoch,i,len(traindataset),loss.item(),nme))
+                stdout_logger.info("epoch:{}, step:{}/{}, loss:{: >3.5f}".format(epoch,i,len(traindataset),loss.item()))
+                step_logger  .info("epoch:{}, step:{}/{}, loss:{: >3.5f}".format(epoch,i,len(traindataset),loss.item()))
 
                 if configuration.show_images: Image.showall(data,pred,gold,configuration)
 
