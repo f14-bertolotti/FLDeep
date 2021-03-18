@@ -1,4 +1,4 @@
 data
-makefile
+.Dockerfile
 *.pyc
 *.swp
