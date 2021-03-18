@@ -15,8 +15,10 @@ class Image:
 
 
     @staticmethod
-    def showall(images, preds, golds, configuration):
+    def showall(images, preds, golds, configuration, dataset=None):
         for image, p, g in zip(images, preds, golds):
+            if dataset:
+                p = dataset.annotation_backward(p)
             Image.show(image.transpose(0,2).transpose(0,1).cpu().numpy(),
                        p[7:].unsqueeze(0).cpu().numpy(),
                        g[7:].unsqueeze(0).cpu().numpy())
