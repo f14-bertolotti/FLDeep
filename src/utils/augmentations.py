@@ -11,6 +11,22 @@ class Augment:
         self.configuration = configuration
         self.flip_rearrange = [0,1,2,3,4,5,6,]
 
+    def random_crop(self, images, annots):
+        with torch.no_grad():
+            cropmask = (torch.rand(size=(images.size(0),)) < self.configuration.augmentation_cropprob).nonzero(as_tuple=False).squeeze(0).tolist()
+            topleft = torch.rand(size=(images.size(0),2))
+            bottomright = topleft + (1 - topleft) * torch.rand(size=(images.size(0),2))
+
+            topleft[:,0].mul_(self.configuration.image_size[0])
+            topleft[:,1].mul_(self.configuration.image_size[1])
+            bottomright[:,0].mul_(self.configuration.image_size[0])
+            bottomright[:,1].mul_(self.configuration.image_size[1])
+            topleft, bottomright = topleft.int(),bottomright.int()
+            for i in cropmask: images[i,:,topleft[i,0]:bottomright[i,0],topleft[i,1]:bottomright[i,1]] = 0
+
+            return images,annots
+
+
     def random_rotate(self, images, annots):
         with torch.no_grad():
             # sample rotations

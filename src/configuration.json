@@ -27,5 +27,6 @@
 	
 	"do_augmentation"      : {"value":true,"comment":"disable/enable all augmentations at once"},	
 	"augmentation_angle"   : {"value":30,"comment":"augmentation parameter for random rotations"},
-	"augmentation_flipprob": {"value":0.5,"comment":"probability of horizonatal flip"}
+	"augmentation_flipprob": {"value":0.5,"comment":"probability of horizonatal flip"},
+	"augmentation_cropprob": {"value":0.5,"comment":"probability of random crop"}
 }
