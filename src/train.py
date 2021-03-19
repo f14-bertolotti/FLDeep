@@ -44,6 +44,7 @@ if __name__ == "__main__":
     model.train()
     stdout_logger.info(("resuming" if configuration.restore else "training") + f" epoch:{model.epoch}, best:{model.best}")
     epoch_logger.info(f"all_parameters {model.all_parameters}, trainable_parameters {model.trainable_parameters}")
+    epoch_logger.info(f"{model.code}")
 
     train = Dataset(     configuration.train_path,configuration)
     valid = Dataset(configuration.validation_path,configuration)
