@@ -11,6 +11,15 @@ class Augment:
         self.configuration = configuration
         self.flip_rearrange = [0,1,2,3,4,5,6,]
 
+    def random_jitter(self, images, annots):
+        for i in range(images.size(0)):
+            images[i] = torchvision.transforms.functional.adjust_brightness(images[i],torch.empty(1).uniform_(0.9,1.1).item())
+            images[i] = torchvision.transforms.functional.adjust_contrast(images[i],torch.empty(1).uniform_(0.9,1.1).item())
+            images[i] = torchvision.transforms.functional.adjust_saturation(images[i],torch.empty(1).uniform_(0.9,1.1).item())
+            images[i] = torchvision.transforms.functional.adjust_hue(images[i],torch.empty(1).uniform_(-.1,+.1).item())
+        return images,annots
+
+
     def random_crop(self, images, annots):
         with torch.no_grad():
             cropmask = (torch.rand(size=(images.size(0),)) < self.configuration.augmentation_cropprob).nonzero(as_tuple=False).squeeze(0).tolist()
