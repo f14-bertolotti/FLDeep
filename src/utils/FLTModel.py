@@ -58,7 +58,7 @@ class Model(torch.nn.Module):
             gold = gold.to(self.configuration.device)
             
             if self.training and self.configuration.do_augmentation: 
-                data,gold = self.augment.random_rotate(*self.augment.random_flip(*self.augment.random_crop(*self.augment.random_jitter(data,gold))))
+                data,gold = self.augment.random_rotate(*self.augment.random_crop(*self.augment.random_jitter(data,gold)))
 
         res0 = self.resnet0(self.normalize(data))
         res1 = self.resnet1(res0)
