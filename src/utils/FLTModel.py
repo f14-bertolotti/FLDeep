@@ -19,11 +19,14 @@ class Model(torch.nn.Module):
         self.resnet1 = torch.nn.Sequential(*list(self.resnet.children())[3:5])
         self.resnet0 = torch.nn.Sequential(*list(self.resnet.children())[0:3])
 
-        self.reslin0 = torch.nn.Linear(256,2048).to(configuration.device)
-        self.reslin1 = torch.nn.Linear(1024,2048).to(configuration.device)
-        self.reslin2 = torch.nn.Linear(2048,2048).to(configuration.device)
-        self.reslin3 = torch.nn.Linear(2048,2048).to(configuration.device)
-        self.reslin  = torch.nn.Linear(2048,512).to(configuration.device)
+        self.reslinA0 = torch.nn.Linear(256,2048).to(configuration.device)
+        self.reslinA1 = torch.nn.Linear(1024,2048).to(configuration.device)
+        self.reslinA2 = torch.nn.Linear(2048,2048).to(configuration.device)
+        self.reslinA3 = torch.nn.Linear(2048,2048).to(configuration.device)
+        self.reslinB0 = torch.nn.Linear(2048,512).to(configuration.device)
+        self.reslinB1 = torch.nn.Linear(2048,512).to(configuration.device)
+        self.reslinB2 = torch.nn.Linear(2048,512).to(configuration.device)
+        self.reslinB3 = torch.nn.Linear(2048,512).to(configuration.device)
 
         self.src_position = torch.nn.Embedding(392,512).to(configuration.device)
 
@@ -37,20 +40,6 @@ class Model(torch.nn.Module):
         self.all_parameters = sum(p.numel() for p in self.parameters())
         self.trainable_parameters = sum(p.numel() for p in self.parameters() if p.requires_grad)
         self.augment = Augment(self.configuration)
-
-    @staticmethod
-    def generate_square_subsequent_mask(sz):
-        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1)
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
-
-    @staticmethod
-    def generate_hourglass_subsequent_mask(sz):
-        mask = (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1).logical_or(
-               (torch.triu(torch.ones(sz, sz)) == 1).transpose(0, 1).flip(1))
-        mask = mask.logical_and(mask.flip(0))
-        mask = mask.float().masked_fill(mask == 0, float('-inf')).masked_fill(mask == 1, float(0.0))
-        return mask
 
     def forward(self, data, gold):
         with torch.no_grad():
@@ -68,12 +57,12 @@ class Model(torch.nn.Module):
         #print(res0.shape, res1.shape, res2.shape, res3.shape)
 
         # divide intermediate representation in patches + linear
-        res0 = self.reslin(fun.dropout(fun.gelu(self.reslin0(einops.rearrange(res0, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
-        res1 = self.reslin(fun.dropout(fun.gelu(self.reslin1(einops.rearrange(res1, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
-        res2 = self.reslin(fun.dropout(fun.gelu(self.reslin2(einops.rearrange(res2, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
-        res3 = self.reslin(fun.dropout(fun.gelu(self.reslin3(einops.rearrange(res3, "b c h w -> b (h w) c"))),p=.1))
+        res0 = self.reslinA0(fun.dropout(fun.gelu(self.reslinB0(einops.rearrange(res0, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=4,w1=4))),p=.1))
+        res1 = self.reslinA1(fun.dropout(fun.gelu(self.reslinB1(einops.rearrange(res1, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
+        res2 = self.reslinA2(fun.dropout(fun.gelu(self.reslinB2(einops.rearrange(res2, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
+        res3 = self.reslinA3(fun.dropout(fun.gelu(self.reslinB3(einops.rearrange(res3, "b c h w -> b (h w) c"))),p=.1))
 
-        #print(res0.shape, res1.shape, res2.shape, res3.shape)
+        # print(res0.shape, res1.shape, res2.shape, res3.shape)
 
         # maxpool on channels
         res0 = einops.reduce(res0, "b (c1 c2) e -> b c1 e","max",c2=16)
@@ -84,7 +73,7 @@ class Model(torch.nn.Module):
 
         res = torch.cat([res0,res1,res2,res3],1)
 
-        #print(res.shape)
+        print(res.shape)
 
         srcs = res + self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1)
         mems = self.encoder(srcs.transpose(0,1)).transpose(0,1)
