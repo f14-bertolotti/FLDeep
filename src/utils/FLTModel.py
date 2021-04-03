@@ -1,4 +1,3 @@
-
 from utils.image import Image
 import torch.nn.functional as fun
 
@@ -19,7 +18,7 @@ class Model(torch.nn.Module):
         self.resnet1 = torch.nn.Sequential(*list(self.resnet.children())[3:5])
         self.resnet0 = torch.nn.Sequential(*list(self.resnet.children())[0:3])
 
-        self.reslinA0 = torch.nn.Linear(256,2048).to(configuration.device)
+        self.reslinA0 = torch.nn.Linear(1024,2048).to(configuration.device)
         self.reslinA1 = torch.nn.Linear(1024,2048).to(configuration.device)
         self.reslinA2 = torch.nn.Linear(2048,2048).to(configuration.device)
         self.reslinA3 = torch.nn.Linear(2048,2048).to(configuration.device)
@@ -27,8 +26,9 @@ class Model(torch.nn.Module):
         self.reslinB1 = torch.nn.Linear(2048,512).to(configuration.device)
         self.reslinB2 = torch.nn.Linear(2048,512).to(configuration.device)
         self.reslinB3 = torch.nn.Linear(2048,512).to(configuration.device)
+        self.dropout  = torch.nn.Dropout(.1)
 
-        self.src_position = torch.nn.Embedding(392,512).to(configuration.device)
+        self.src_position = torch.nn.Embedding(441,512).to(configuration.device)
 
         self.downscale = torch.nn.Linear(512,2).to(configuration.device)
         self.encoder   = torch.nn.TransformerEncoder(torch.nn.TransformerEncoderLayer(512,nhead=8,dim_feedforward=2048,activation="gelu",dropout=.1),num_layers=4).to(configuration.device)
@@ -54,30 +54,23 @@ class Model(torch.nn.Module):
         res2 = self.resnet2(res1)
         res3 = self.resnet3(res2)
 
-        #print(res0.shape, res1.shape, res2.shape, res3.shape)
-
         # divide intermediate representation in patches + linear
-        res0 = self.reslinA0(fun.dropout(fun.gelu(self.reslinB0(einops.rearrange(res0, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=4,w1=4))),p=.1))
-        res1 = self.reslinA1(fun.dropout(fun.gelu(self.reslinB1(einops.rearrange(res1, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
-        res2 = self.reslinA2(fun.dropout(fun.gelu(self.reslinB2(einops.rearrange(res2, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2))),p=.1))
-        res3 = self.reslinA3(fun.dropout(fun.gelu(self.reslinB3(einops.rearrange(res3, "b c h w -> b (h w) c"))),p=.1))
-
-        # print(res0.shape, res1.shape, res2.shape, res3.shape)
+        res0 = self.reslinB0(self.dropout(fun.gelu(self.reslinA0(einops.rearrange(res0, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=4,w1=4)))))
+        res1 = self.reslinB1(self.dropout(fun.gelu(self.reslinA1(einops.rearrange(res1, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2)))))
+        res2 = self.reslinB2(self.dropout(fun.gelu(self.reslinA2(einops.rearrange(res2, "b c (h1 h2) (w1 w2) -> b (h2 w2) (c h1 w1)",h1=2,w1=2)))))
+        res3 = self.reslinB3(self.dropout(fun.gelu(self.reslinA3(einops.rearrange(res3, "b c h w -> b (h w) c")))))
 
         # maxpool on channels
-        res0 = einops.reduce(res0, "b (c1 c2) e -> b c1 e","max",c2=16)
-        res1 = einops.reduce(res1, "b (c1 c2) e -> b c1 e","max",c2=8)
-        res2 = einops.reduce(res2, "b (c1 c2) e -> b c1 e","max",c2=4)
-
-        #print(res0.shape, res1.shape, res2.shape, res3.shape)
+        res0 = einops.reduce(res0, "b (c1 c2) e -> b c1 e","max",c2=8)
+        res1 = einops.reduce(res1, "b (c1 c2) e -> b c1 e","max",c2=4)
+        res2 = einops.reduce(res2, "b (c1 c2) e -> b c1 e","max",c2=2)
 
         res = torch.cat([res0,res1,res2,res3],1)
-
-        print(res.shape)
 
         srcs = res + self.src_position.weight.unsqueeze(0).repeat(gold.size(0),1,1)
         mems = self.encoder(srcs.transpose(0,1)).transpose(0,1)
         ldmk = self.downscale(mems[:,:68])
 
         return torch.cat([gold[:,:7],ldmk],1)
+
 
