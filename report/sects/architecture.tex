@@ -62,12 +62,12 @@ mems = self.encoder(srcs.transpose(0,1)).transpose(0,1)
 ldmk = self.downscale(mems[:,:68])
 \end{lstlisting}
 
-With this last piece, we have practically defined the entire architecture. The only thing remained to discuss is the training procedure. We used a \textit{l1 loss} with \textit{Adam} optimizer, \textit{learning rate} set to $1e-4$ and \textit{batch size} of $32$.
+With this last piece, we have practically defined the entire architecture. The only thing remained to discuss is the training procedure. We used a \textit{l1 loss} with \textit{Adam} optimizer, \textit{learning rate} set to $1e^{-4}$ and \textit{batch size} of $32$.
 
 Since the proposed dataset (300W) is quite small, we introduce three augmentation techniques. 
-\begin{itemize}
+\begin{enumerate}
     \item random rotations.
     \item random crop.
     \item random jitter.
-\end{itemize}
+\end{enumerate}
 

@@ -18,8 +18,8 @@ if __name__ == "__main__":
 
     logging.info(f"{__file__.upper()} STARTING")
     model = SaveModel(configuration) 
+    configuration.load()
     model.eval()
-    logging.info(f"testing epoch:{model.epoch}, valid_nme:{model.best}")
     
     test = Dataset(configuration.test_path,configuration)
     testdataset = torch.utils.data.DataLoader(test, batch_size=configuration.batch_size, collate_fn=Dataset.collate_fn, num_workers=1, prefetch_factor=10)
@@ -28,6 +28,7 @@ if __name__ == "__main__":
         loss = None
         nme  = None
         for i,(data, gold, true) in enumerate(testdataset,1):
+            logging.info(f"batch:{i}/{len(testdataset)}, loss:{loss}, nme:{nme}")
             gold = gold.to(configuration.device)
             true = true.to(configuration.device)
             pred = torch.zeros(gold.shape).to(configuration.device)
@@ -39,7 +40,7 @@ if __name__ == "__main__":
             loss = loss+(model.loss(pred[:,7:],gold[:,7:]).item()-loss)/i if loss else model.loss(pred[:,7:],gold[:,7:]).item()
             nme  = nme +(Metrics.normalized_mean_error(pred,true,test).item()-nme)/i if nme else Metrics.normalized_mean_error(pred,true,test).item()
 
-    logging.info(f"epoch:{model.epoch}, valid_nme:{model.best}, nme:{nme}")
+    logging.info(f"average nme:{nme}")
     
     logging.info(f"{__file__.upper()} STARTING")
  
