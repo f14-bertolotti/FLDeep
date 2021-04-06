@@ -40,8 +40,8 @@ As you can see our architecture can achieve results that are quite close to the 
 
 # Samples
 Here, you have two examples of predictions from the test set of [300W].
-![alt text](https://github.com/f14-bertolotti/FLDeep/blob/main/report/figs/prediction1.png?raw=true)
-![alt text](https://github.com/f14-bertolotti/FLDeep/blob/main/report/figs/prediction2.png?raw=true)
+![alt text](https://github.com/f14-bertolotti/FLDeep/blob/master/report/figs/prediction1.png?raw=true)
+![alt text](https://github.com/f14-bertolotti/FLDeep/blob/master/report/figs/prediction2.png?raw=true)
 
 
 [300W]: https://ibug.doc.ic.ac.uk/resources/300-W/
