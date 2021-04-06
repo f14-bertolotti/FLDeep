@@ -20,12 +20,12 @@
         "end_epoch"       : { "value":      300, "comment":                           "for how many epoch should be the model trained" },
         "random_seed"     : { "value":       14, "comment":                             "seed to be used for all random initialization"},
         "device"          : { "value": "cuda:0", "comment":                             "cuda:0 for gpu training, cpu for cpu training"},
-        "show_images"     : { "value":     true, "comment":       "true if all the images should be saved into the epoch_log directory"},
+        "show_images"     : { "value":    false, "comment":       "true if all the images should be saved into the epoch_log directory"},
         "steps_to_reload" : { "value":      100, "comment":      "how many mini_step should be done before reloading the configuration"},
         
         "logging_format"  : { "value":"%(levelname)s|%(asctime)s| %(message)s", "comment":"format of the logging"},
-	
-	"do_augmentation"      : {"value":true,"comment":"disable/enable all augmentations at once"},	
-	"augmentation_angle"   : {"value":30,"comment":"augmentation parameter for random rotations"},
-	"augmentation_cropprob": {"value":0.5,"comment":"probability of random crop"}
+    
+        "do_augmentation"      : {"value": true,"comment":   "disable/enable all augmentations at once"},	
+        "augmentation_angle"   : {"value":   30,"comment":"augmentation parameter for random rotations"},
+        "augmentation_cropprob": {"value":  0.5,"comment":                 "probability of random crop"}
 }

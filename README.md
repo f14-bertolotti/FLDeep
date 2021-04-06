@@ -34,9 +34,14 @@ Once trained you should be able to obtain very similar results:
 | [Adaloss] | 3.31   |
 | [SAN-GT]  | 3.98   |
 | this      | 4.26   |
-| CFSS      | 5.76   |
+| [CFSS]    | 5.76   |
 
 As you can see our architecture can achieve results that are quite close to the state-of-the-art. Probably, with a bit more of work and research the performance could be push further below. But this is just speculation.
+
+# Samples
+Here, you have two examples of predictions from the test set of [300W].
+![alt text](https://github.com/f14-bertolotti/FLDeep/blob/main/report/figs/prediction1.png?raw=true)
+![alt text](https://github.com/f14-bertolotti/FLDeep/blob/main/report/figs/prediction2.png?raw=true)
 
 
 [300W]: https://ibug.doc.ic.ac.uk/resources/300-W/

@@ -4,7 +4,7 @@ THISFILE := $(abspath $(lastword $(MAKEFILE_LIST)))
 THISDIR  := $(dir $(THISFILE))
 
 .Dockerfile: Dockerfile
-	sudo docker build . -t f14:FLDeep -f Dockerfile
+	docker build . -t f14:FLDeep -f Dockerfile
 	touch .Dockerfile
 
 all: download train test
