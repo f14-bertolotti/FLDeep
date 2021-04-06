@@ -35,7 +35,7 @@ if __name__ == "__main__":
             pred = model(data,gold)
 
             configuration.load()
-            if configuration.show_images: Image.showall(data,pred.cpu(),true,configuration,dataset=test)
+            if configuration.show_images: Image.showall(data,pred.cpu(),true,configuration)
     
             loss = loss+(model.loss(pred[:,7:],gold[:,7:]).item()-loss)/i if loss else model.loss(pred[:,7:],gold[:,7:]).item()
             nme  = nme +(Metrics.normalized_mean_error(pred,true,test).item()-nme)/i if nme else Metrics.normalized_mean_error(pred,true,test).item()
