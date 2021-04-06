@@ -16,7 +16,7 @@ download:
 		--mount type=bind,src=${THISDIR},dst=/FacialLandmarkDetection/ \
 		-it f14:FLDeep python3 download.py
 
-train: .Dockerfile
+train-gpu: .Dockerfile
 	docker run --rm --gpus all \
 			--user $(UID) \
 			--env MPLCONFIGDIR=/mpl \
@@ -24,8 +24,24 @@ train: .Dockerfile
 	    	--mount type=bind,src=${THISDIR},dst=/FacialLandmarkDetection/ \
 	    	-it f14:FLDeep python3 train.py
 
-test: .Dockerfile
+test-gpu: .Dockerfile
 	docker run --rm --gpus all \
+			--user $(UID) \
+			--env MPLCONFIGDIR=/mpl \
+			--shm-size=2G \
+	    	--mount type=bind,src=${THISDIR},dst=/FacialLandmarkDetection/ \
+	    	-it f14:FLDeep python3 test.py
+
+train-cpu: .Dockerfile
+	docker run --rm \
+			--user $(UID) \
+			--env MPLCONFIGDIR=/mpl \
+			--shm-size=2G \
+	    	--mount type=bind,src=${THISDIR},dst=/FacialLandmarkDetection/ \
+	    	-it f14:FLDeep python3 train.py
+
+test-cpu: .Dockerfile
+	docker run --rm \
 			--user $(UID) \
 			--env MPLCONFIGDIR=/mpl \
 			--shm-size=2G \
