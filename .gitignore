@@ -2,3 +2,8 @@ data
 .Dockerfile
 *.pyc
 *.swp
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
