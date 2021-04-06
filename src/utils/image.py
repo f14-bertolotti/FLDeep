@@ -13,7 +13,8 @@ class Image:
         ax.imshow(image,**kwargs)
         list(map(lambda x:ax.scatter(x[:,0]+configuration.image_size[0]//2,x[:,1]+configuration.image_size[1]//2,s=4, color="black"), annotations))
         list(map(lambda x:ax.scatter(x[:,0]+configuration.image_size[0]//2,x[:,1]+configuration.image_size[1]//2,s=3, color= "lime"), annotations))
-        fig.savefig(configuration.epoch_log_path+str(Image.no_saved))
+        plt.axis('off')
+        fig.savefig(configuration.epoch_log_path+str(Image.no_saved), bbox_inches='tight')
         plt.close()
         Image.no_saved += 1
 
