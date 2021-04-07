@@ -1,6 +1,6 @@
 \section{Combining ResNets with Transformers}\label{sect:architecture}
 
-In this section we are going to discuss the chosen architecture. Firstly, we consider a pre-trained ResNet on ImageNet. In particular, ResNet101. We proceed by gaining access to different layers of the ResNet:
+In this section, we are going to discuss the chosen architecture. Firstly, we consider a pre-trained ResNet on ImageNet. In particular, ResNet101. We proceed by gaining access to different layers of the ResNet:
 
 \begin{lstlisting}[language=Python]
 self.resnet  = torchvision.models.resnet101(pretrained=True, progress=True)
@@ -25,7 +25,7 @@ res2 = r(res2,"b c (h1 h2) (w1 w2) -> b (c h1 w1) (h2 w2)",h1=2,w1=2)
 res3 = r(res3,"b c h w -> b (h w) c")
 \end{lstlisting}
 
-Now, \texttt{res0,res1,res2} and \texttt{res3} contains more channels with linearized patches. Once again, it is worth looking at the shapes of these tensors. $\text{res}_0\in\mathbb{R}^{b\times1024\times784}$, $\text{res}_1\in\mathbb{R}^{b\times1024\times784}$, $\text{res}_2\in\mathbb{R}^{b\times2048\times196}$, $\text{res}_3\in\mathbb{R}^{b\times2048\times49}$. Now, it should not be too hard to interpret these linearized patches as tokens (much like in NLP) and feed them to a Transformer. However, there are two considerations to be made. Firstly, all patches sizes should be the same. To achieve this, we can employ a feed forward network. Secondly, we have $1024+1024+2048+2048=6144$ tokens which require too much memory. Thus, to reduce the memory footprint, we average several tokens togheter.
+Now, \texttt{res0,res1,res2}, and \texttt{res3} contains more channels with linearized patches. Once again, it is worth looking at the shapes of these tensors. $\text{res}_0\in\mathbb{R}^{b\times1024\times784}$, $\text{res}_1\in\mathbb{R}^{b\times1024\times784}$, $\text{res}_2\in\mathbb{R}^{b\times2048\times196}$, $\text{res}_3\in\mathbb{R}^{b\times2048\times49}$. Now, it should not be too hard to interpret these linearized patches as tokens (much like in NLP) and feed them to a Transformer. However, there are two considerations to be made. Firstly, all patch sizes should be the same. To achieve this, we can employ a feed-forward network. Secondly, we have $1024+1024+2048+2048=6144$ tokens which require too much memory. Thus, to reduce the memory footprint, we average several tokens together.
 
 \begin{lstlisting}[language=Python]
 from einops import reduce as rd
@@ -35,7 +35,7 @@ res2 = rd(ffB2(dropout(gelu(ffA2(res2)))),"b e (c1 c2)->b c1 e","max",c2=4)
 res3 = rd(ffB3(dropout(gelu(ffA3(res2)))),"b e (c1 c2)->b c1 e","max",c2=1)
 \end{lstlisting}
 
-With the previous snippet, we solved the discussed issues. Now, we have a reasonable ammount of tokens (441) each one of them having the same size (512). We can concatenate these tokens togheter and proceed to add the positional embeddings.
+With the previous snippet, we solved the discussed issues. Now, we have a reasonable amount of tokens (441) each one of them having the same size (512). We can concatenate these tokens together and proceed to add the positional embeddings.
 
 \begin{lstlisting}[language=Python]
 self.positions = torch.nn.Embedding(441,512).weight.unsqueeze(0)
@@ -44,7 +44,7 @@ srcs = torch.cat([res0,res1,res2,res3],1)
 srcs += self.positions.repeat(batch_size,1,1)
 \end{lstlisting}
 
-At this point, we have prepared the input for the transformer. We feed the prepared patches to the Transformer. Next, we can downscale the first $68$ tokens to only to $two$ features representing the landmark position on the face.
+At this point, we have prepared the input for the transformer. We feed the prepared patches to the Transformer. Next, we can downscale the first $68$ tokens to only $two$ features representing the landmark position on the face.
 
 \begin{lstlisting}[language=Python]
 from torch.nn import TransformerEncoder
@@ -62,7 +62,7 @@ mems = self.encoder(srcs.transpose(0,1)).transpose(0,1)
 ldmk = self.downscale(mems[:,:68])
 \end{lstlisting}
 
-With this last piece, we have practically defined the entire architecture. The only thing remained to discuss is the training procedure. We used a \textit{l1 loss} with \textit{Adam} optimizer, \textit{learning rate} set to $1e^{-4}$ and \textit{batch size} of $32$.
+With this last piece, we have practically defined the entire architecture. The only thing that remained to discuss is the training procedure. We used an \textit{l1 loss} with \textit{Adam} optimizer, \textit{learning rate} set to $1e^{-4}$, and \textit{batch size} of $32$.
 
 Since the proposed dataset (300W) is quite small, we introduce three augmentation techniques. 
 \begin{enumerate}

@@ -1,16 +1,16 @@
 # FLDeep
-This is my very simplistic take onto the task of facial landmark detection. 
-I developed everything for two phd exams. I have put a bit of attention into reproducibility but I cannot guaranteed that everything will work flawlessly. 
+This is my very simplistic take on the task of facial landmark detection. 
+I developed everything for two Ph.D. exams. I have put a bit of attention into reproducibility but I cannot guarantee that everything will work flawlessly. 
 
 # Prerequisites
 Well, you just need ```Docker``` with the ``` nvidia-container-toolkit``` and ```make```.
-Additionally, there is a single configuration file ```src/configuration.json```. Every option is commented. You should just need to edit this file to fit you needs. However, some things that you should know:
+Additionally, there is a single configuration file ```src/configuration.json```. Every option is commented on. You should just need to edit this file to fit your needs. However, some things that you should know:
 - The ```restore``` property should be always set to ```true``` during testing.
-- The ```device``` property controls which device to use cpu/gpu. However docker will always try to use the gpu. If you don't have a GPU I don't know if it will work.
-- The ```url``` property points to the dataset location. I do not mantain the dataset. Thus it can get unavailable. Anyway, you should be able to use any dataset as long as its structure matched the one of [300W].
-- The ```train_path```, ```test_path``` and ```validation_path``` can be changed but they should point in a subdirectory of the main project directory. Otherwise, docker won't be able to find the dataset as it binds to main directory.
-- The ```device``` property controls the usage of the gpu. It should chosen accordingly with the targets from the makefile.
-- One last thing. I have not test all the parameters exestensevly. Therefore, the probability of breaking something by changing a value is quite high. 
+- The ```device``` property controls which device to use CPU/GPU. However, docker will always try to use the GPU. If you don't have a GPU I don't know if it will work.
+- The ```url``` property points to the dataset location. I do not maintain the dataset. Thus it can get unavailable. Anyway, you should be able to use any dataset as long as its structure matched the one of [300W].
+- The ```train_path```, ```test_path``` and ```validation_path``` can be changed but they should point in a subdirectory of the main project directory. Otherwise, docker won't be able to find the dataset as it binds to the main directory.
+- The ```device``` property controls the usage of the GPU. It should be chosen accordingly with the targets from the makefile.
+- One last thing. I have not tested all the parameters extensively. Therefore, the probability of breaking something by changing a value is quite high. 
 
 
 # The architecture
@@ -36,7 +36,7 @@ Once trained you should be able to obtain very similar results:
 | this      | 4.26   |
 | [CFSS]    | 5.76   |
 
-As you can see our architecture can achieve results that are quite close to the state-of-the-art. Probably, with a bit more of work and research the performance could be push further below. But this is just speculation.
+As you can see our architecture can achieve results that are quite close to the state-of-the-art. Probably, with a bit more work and research, the performance could be pushed further below. But this is just speculation.
 
 # Samples
 Here, you have two examples of predictions from the test set of [300W].
