@@ -1,4 +1,7 @@
+<img align="left" width="80px" src="https://raw.githubusercontent.com/f14-bertolotti/FLDeep/main/icon/icon-512px.png" />
+
 # FLDeep
+
 This is my very simplistic take on the task of facial landmark detection. 
 I developed everything for two Ph.D. exams. I have put a bit of attention into reproducibility but I cannot guarantee that everything will work flawlessly. 
 
@@ -47,7 +50,7 @@ Here, you have two examples of predictions from the test set of [300W].
 [300W]: https://ibug.doc.ic.ac.uk/resources/300-W/
 [Vision Transformer]: https://arxiv.org/abs/2010.11929
 [ResNet101]: https://pytorch.org/hub/pytorch_vision_resnet/
-[report]: https://github.com/f14-bertolotti/FLDeep/blob/main/report/main.pdf
+[report]: https://github.com/f14-bertolotti/FLDeep/blob/master/report/main.pdf
 [3DDE]: https://arxiv.org/pdf/1902.01831v2.pdf
 [CNNCRF]: https://proceedings.neurips.cc/paper/2019/file/56352739f59643540a3a6e16985f62c7-Paper.pdf
 [Adaloss]: https://arxiv.org/pdf/1908.01070v1.pdf
