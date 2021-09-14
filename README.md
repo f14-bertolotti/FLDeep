@@ -1,4 +1,4 @@
-<img align="left" width="80px" src="https://raw.githubusercontent.com/f14-bertolotti/FLDeep/main/icon/icon.png" />
+<img align="left" width="80px" src="https://github.com/f14-bertolotti/FLDeep/blob/master/icon/icon.png" />
 
 # FLDeep
 
